@@ -47,10 +47,13 @@ int (*evict_fcn)() = NULL;
  * counter. 
  */
 void access_mem(char type, addr_t vaddr) {
+	
 	char *memptr = find_physpage(vaddr, type);
+	
 	int *versionptr = (int *)memptr;
 	addr_t *checkaddr = (addr_t *)(memptr + sizeof(int));
-
+	printf("vaddr in access memory: %lu \n", vaddr);
+	printf("vaddr in access memory: %lu \n", *checkaddr);
 	if (*checkaddr != vaddr) {
 		fprintf(stderr,"Error, simulated page returned by pagetable lookup doese not have expected value.\n");
 	}
@@ -59,7 +62,7 @@ void access_mem(char type, addr_t vaddr) {
 		// write access to page, increment version number
 		(*versionptr)++;
 	}
-
+	printf("----------------\n");
 }
 
 
@@ -67,8 +70,9 @@ void replay_trace(FILE *infp) {
 	char buf[MAXLINE];
 	addr_t vaddr = 0;
 	char type;
-
+	
 	while(fgets(buf, MAXLINE, infp) != NULL) {
+
 		if(buf[0] != '=') {
 			sscanf(buf, "%c %lx", &type, &vaddr);
 			if(debug)  {
@@ -84,6 +88,7 @@ void replay_trace(FILE *infp) {
 
 
 int main(int argc, char *argv[]) {
+	
 	int opt;
 	unsigned swapsize = 4096;
 	FILE *tfp = stdin;
@@ -115,7 +120,7 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 	}
-
+	
 	// Initialize main data structures for simulation.
 	// This happens before calling the replacement algorithm init function
 	// so that the init_fcn can refer to the coremap if needed.
@@ -123,7 +128,7 @@ int main(int argc, char *argv[]) {
 	physmem = malloc(memsize * SIMPAGESIZE);
 	swap_init(swapsize);
 	init_pagetable();
-
+	
 	// Initialize replacement algorithm functions.
 	if(replacement_alg == NULL) {
 		fprintf(stderr, "%s", usage);
@@ -144,15 +149,17 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 	}
+	
 	// Call replacement algorithm's init_fcn before replaying trace.
 	init_fcn();
-
+	
 	replay_trace(tfp);
+	printf("end \n");
 	print_pagedirectory();
-
+	
 	// Cleanup - removes temporary swapfile.
 	swap_destroy();
-
+	
 	printf("\n");
 	printf("Hit count: %d\n", hit_count);
 	printf("Miss count: %d\n", miss_count);
