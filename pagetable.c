@@ -39,9 +39,19 @@ int allocate_frame(pgtbl_entry_t *p) {
 		// All frames were in use, so victim frame must hold some page
 		// Write victim page to swap, if needed, and update pagetable
 		// IMPLEMENTATION NEEDED
-		pgtbl_entry_t *victim_frame = coremap[frame].pte;
-		off_t swap_offset = victim_frame->swap_off;
-		swap_pageout(frame, swap_offset);
+
+		// get the victim page table entry 
+		pgtbl_entry_t *victim = coremap[frame].pte;
+
+		// swap the victim into swap file
+		off_t swap_offset = victim->swap_off;	
+		victim->swap_off = swap_pageout(frame, swap_offset);
+
+		// update the label of victim to be ONSWAP
+		victim = (uintptr_t)victim | PG_ONSWAP;
+
+		// increment the evict dirty count
+		evict_dirty_count = evict_dirty_count + 1;
 
 	}
 
