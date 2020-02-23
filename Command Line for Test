@@ -1,0 +1,1 @@
+./sim -f traceprogs/tr-matmul.ref -m 30 -s 1 -a rand
