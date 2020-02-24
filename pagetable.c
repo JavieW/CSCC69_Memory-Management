@@ -44,16 +44,17 @@ int allocate_frame(pgtbl_entry_t *p) {
 		pgtbl_entry_t *victim = coremap[frame].pte;
 
 		// swap the victim into swap file
-		off_t swap_offset = victim->swap_off;	
-		victim->swap_off = swap_pageout(frame, swap_offset);
-
-		// update the label of victim to be ONSWAP
-		victim->frame |= PG_ONSWAP;
-		victim->frame &= ~PG_VALID;
-
-		// increment the evict dirty count
-		evict_dirty_count++;
-
+		off_t swap_offset = victim->swap_off;
+		// check if the page is successfully swaped out
+		if (swap_pageout(frame, swap_offset) != INVALID_SWAP) {
+			// update the offset
+			victim->swap_off = swap_offset;
+			// update the label of victim to be ONSWAP
+			victim->frame |= PG_ONSWAP;
+			victim->frame &= ~PG_VALID;
+			// increment the evict dirty count
+			evict_dirty_count++;
+		}
 	}
 
 	// Record information for virtual page that will now be stored in frame
@@ -176,7 +177,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	// Check if p is valid or not, on swap or not, and handle appropriately
 
 	// Case 1: the entry is invalid and not on swap
-	if (!(p->frame & PG_VALID) && !(p->frame & PG_ONSWAP)){
+	if (!(p->frame & PG_VALID) && !(p->frame & PG_ONSWAP)) {
 		int frame = allocate_frame(p);
 		init_frame(frame, vaddr);
 		p->frame = frame << PAGE_SHIFT;
@@ -184,10 +185,10 @@ char *find_physpage(addr_t vaddr, char type) {
 		printf("frame: %d \n", frame);
 	}
 	// Case 2: the entry is invalid and on swap
-	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)){
+	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)) {
 		int frame = allocate_frame(p);
-		swap_pagein(frame, p->swap_off);
-		miss_count++;
+		if (!swap_pagein(frame, p->swap_off))
+			miss_count++;
 	} 
 	// Case 3: the entry is valid, increment the hit count
 	else if (p->frame & PG_VALID) {
