@@ -48,11 +48,11 @@ int allocate_frame(pgtbl_entry_t *p) {
 		victim->swap_off = swap_pageout(frame, swap_offset);
 
 		// update the label of victim to be ONSWAP
-		victim->frame = (uintptr_t)victim->frame | PG_ONSWAP;
-		victim->frame = (uintptr_t)victim->frame & ~PG_VALID;
+		victim->frame |= PG_ONSWAP;
+		victim->frame &= ~PG_VALID;
 
 		// increment the evict dirty count
-		evict_dirty_count = evict_dirty_count + 1;
+		evict_dirty_count++;
 
 	}
 
@@ -171,7 +171,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	// ------debug purpose----------
 	
 	// Use vaddr to get index into 2nd-level page table and initialize 'p'
-	p = (pgtbl_entry_t *) (pgtbl + PGTBL_INDEX(vaddr));
+	p = pgtbl + PGTBL_INDEX(vaddr);
 
 	// Check if p is valid or not, on swap or not, and handle appropriately
 
@@ -180,22 +180,28 @@ char *find_physpage(addr_t vaddr, char type) {
 		int frame = allocate_frame(p);
 		init_frame(frame, vaddr);
 		p->frame = frame << PAGE_SHIFT;
-		
+		miss_count++;
 		printf("frame: %d \n", frame);
 	}
 	// Case 2: the entry is invalid and on swap
 	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)){
 		int frame = allocate_frame(p);
 		swap_pagein(frame, p->swap_off);
+		miss_count++;
+	} 
+	// Case 3: the entry is valid, increment the hit count
+	else if (p->frame & PG_VALID) {
+		hit_count++;
 	}
 
 	// Make sure that p is marked valid and referenced. Also mark it
 	// dirty if the access type indicates that the page will be written to.
-	p->frame = (uintptr_t)p->frame | PG_VALID;
-	p->frame = (uintptr_t)p->frame | PG_REF;
+	p->frame |= PG_VALID;
+	p->frame |= PG_REF;
+	ref_count++;
 	
 	if (type == 'M' || type == 'S'){
-		p->frame = (uintptr_t)p->frame | PG_DIRTY;
+		p->frame |= PG_DIRTY;
 	}
 	
 	// Call replacement algorithm's ref_fcn for this page
