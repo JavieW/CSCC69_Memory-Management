@@ -49,18 +49,20 @@ int allocate_frame(pgtbl_entry_t *p) {
 		if (swap_pageout(frame, swap_offset) != INVALID_SWAP) {
 			// update the offset
 			victim->swap_off = swap_offset;
-			// update the label of victim to be ONSWAP
+			// update the label of victim to be ONSWAP and INVALID
 			victim->frame |= PG_ONSWAP;
 			victim->frame &= ~PG_VALID;
-			// increment the evict dirty count
-			evict_dirty_count++;
+			// if the frame is dirty, increment the evict_dirty_count
+			if (victim->frame & PG_DIRTY)
+				evict_dirty_count++;
+			else
+				evict_clean_count++;
 		}
 	}
 
 	// Record information for virtual page that will now be stored in frame
 	coremap[frame].in_use = 1;
 	coremap[frame].pte = p;
-
 	return frame;
 }
 
@@ -151,7 +153,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	printf("type: %c \n", type);
 	// ------debug purpose----------
 
-	pgtbl_entry_t *p=NULL; // pointer to the full page table entry for vaddr
+	pgtbl_entry_t *p = NULL; // pointer to the full page table entry for vaddr
 	unsigned idx = PGDIR_INDEX(vaddr); // get index into page directory
 	//printf("index: %d \n", idx);
 	// IMPLEMENTATION NEEDED
@@ -160,7 +162,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	pgtbl_entry_t *pgtbl;
 	
 	// if this is the first time to access the page table, initialize it
-	if (!(pgdir[idx].pde & PG_VALID)){
+	if (!(pgdir[idx].pde & PG_VALID)) {
 		pgdir[idx] = init_second_level();
 	}
 	
@@ -201,7 +203,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	p->frame |= PG_REF;
 	ref_count++;
 	
-	if (type == 'M' || type == 'S'){
+	if (type == 'M' || type == 'S') {
 		p->frame |= PG_DIRTY;
 	}
 	
@@ -209,7 +211,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	ref_fcn(p);
 	
 	// Return pointer into (simulated) physical memory at start of frame
-	return  &physmem[(p->frame >> PAGE_SHIFT)*SIMPAGESIZE];
+	return &physmem[(p->frame >> PAGE_SHIFT)*SIMPAGESIZE];
 }
 
 void print_pagetbl(pgtbl_entry_t *pgtbl) {
