@@ -152,10 +152,10 @@ char *find_physpage(addr_t vaddr, char type) {
 
 	pgtbl_entry_t *p=NULL; // pointer to the full page table entry for vaddr
 	unsigned idx = PGDIR_INDEX(vaddr); // get index into page directory
-	//printf("index: %d \n", idx);
+
 	// IMPLEMENTATION NEEDED
 	// Use top-level page directory to get pointer to 2nd-level page table
-	
+	idx = idx%PTRS_PER_PGTBL;
 	pgtbl_entry_t *pgtbl;
 	
 	// if this is the first time to access the page table, initialize it
