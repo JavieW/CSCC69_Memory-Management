@@ -160,6 +160,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	// Use top-level page directory to get pointer to 2nd-level page table
 	
 	pgtbl_entry_t *pgtbl;
+	idx = idx & PGTBL_MASK;
 	
 	// if this is the first time to access the page table, initialize it
 	if (!(pgdir[idx].pde & PG_VALID)) {
