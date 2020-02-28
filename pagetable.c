@@ -55,7 +55,7 @@ int allocate_frame(pgtbl_entry_t *p) {
 		if (victim->frame & PG_DIRTY)
 		{
 			evict_dirty_count++;
-			// victim->frame |= ~PG_DIRTY;
+			victim->frame &= ~PG_DIRTY;
 			printf("dirty!!!!!");
 		} else {
 			evict_clean_count++;
@@ -168,7 +168,7 @@ char *find_physpage(addr_t vaddr, char type) {
 		//// lower bit will be set to valid by below
 		pgdir[idx] = init_second_level();
 	}
-	pgtbl_entry_t *pgtbl = pgdir[idx].pde & PAGE_MASK;
+	pgtbl_entry_t *pgtbl = (pgtbl_entry_t *)(pgdir[idx].pde & PAGE_MASK);
 	
 	//// ------debug purpose----------
 	printf("page directory: \n");
