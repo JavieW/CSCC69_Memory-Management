@@ -196,6 +196,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)){
 		int frame = allocate_frame(p);
 		swap_pagein(frame, p->swap_off);
+		p->frame &= ~PG_ONSWAP;
 		miss_count++;	// memeor
 	//// Case 3: we find the frame in pysical memory
 	} else {
