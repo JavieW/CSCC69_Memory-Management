@@ -56,7 +56,7 @@ int allocate_frame(pgtbl_entry_t *p) {
 		{
 			evict_dirty_count++;
 			// reset Dirty bit after swapping
-			victim->frame |= ~PG_DIRTY;
+			victim->frame &= ~PG_DIRTY;
 		} else {
 			evict_clean_count++;
 		}
@@ -160,7 +160,7 @@ char *find_physpage(addr_t vaddr, char type) {
 		//// lower bit will be set to valid by below
 		pgdir[idx] = init_second_level();
 	}
-	pgtbl_entry_t *pgtbl = pgdir[idx].pde & PAGE_MASK;
+	pgtbl_entry_t *pgtbl = (pgtbl_entry_t *)(pgdir[idx].pde & PAGE_MASK);
 	
 	// Use vaddr to get index into 2nd-level page table and initialize 'p'
 	p = &pgtbl[PGTBL_INDEX(vaddr)];
