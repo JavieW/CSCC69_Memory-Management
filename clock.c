@@ -29,7 +29,6 @@ int clock_evict() {
 		} 
 		else {
 			// set the ref bit to 1
-			coremap[i].pte->frame |= PG_REF;
 			// update the start index
 			if (i + 1 == memsize)
 				start = 0;
@@ -40,6 +39,7 @@ int clock_evict() {
 		if (i + 1 == memsize)
 			i = 0;
 	}
+
 	return i;
 }
 
@@ -48,7 +48,7 @@ int clock_evict() {
  * Input: The page table entry for the page that is being accessed.
  */
 void clock_ref(pgtbl_entry_t *p) {
-	p->frame |= PG_REF;
+	// p->frame |= PG_REF;
 	return;
 }
 
