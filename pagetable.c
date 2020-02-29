@@ -35,7 +35,6 @@ int allocate_frame(pgtbl_entry_t *p) {
 	if(frame == -1) { // Didn't find a free page.
 		// Call replacement algorithm's evict function to select victim
 		frame = evict_fcn();
-		printf("swap!!!!");
 		// All frames were in use, so victim frame must hold some page
 		// Write victim page to swap, if needed, and update pagetable
 		// IMPLEMENTATION NEEDED
@@ -56,10 +55,8 @@ int allocate_frame(pgtbl_entry_t *p) {
 		{
 			evict_dirty_count++;
 			victim->frame &= ~PG_DIRTY;
-			printf("dirty!!!!!");
 		} else {
 			evict_clean_count++;
-			printf("clean!!!!!");
 		}
 	}
 
@@ -151,19 +148,20 @@ void init_frame(int frame, addr_t vaddr) {
  * this function.
  */
 char *find_physpage(addr_t vaddr, char type) {
-	// ------debug purpose----------
-	printf("start! \n");
-	printf("virtual address: %lx \n", vaddr);
-	printf("type: %c \n", type);
-	// ------debug purpose----------
+	// // ------debug purpose----------
+	// printf("start! \n");
+	// printf("virtual address: %lx \n", vaddr);
+	// printf("type: %c \n", type);
+	// // ------debug purpose----------
 
 	pgtbl_entry_t *p=NULL; // pointer to the full page table entry for vaddr
 	unsigned idx = PGDIR_INDEX(vaddr); // get index into page directory
 
 	// IMPLEMENTATION NEEDED
 	// Use top-level page directory to get pointer to 2nd-level page table
-
+	// printf("here is the original page directory: %u \n", idx);
 	idx &= PGTBL_MASK;	//// prevent idx out of range
+	// printf("here is the page directory after module: %u \n", idx);
 	if (!(pgdir[idx].pde & PG_VALID)){
 		//// lower bit will be set to valid by below
 		pgdir[idx] = init_second_level();
@@ -171,8 +169,8 @@ char *find_physpage(addr_t vaddr, char type) {
 	pgtbl_entry_t *pgtbl = (pgtbl_entry_t *)(pgdir[idx].pde & PAGE_MASK);
 	
 	//// ------debug purpose----------
-	printf("page directory: \n");
-	print_pagedirectory();
+	// printf("page directory: \n");
+	// print_pagedirectory();
 	//// ------debug purpose----------
 	
 	// Use vaddr to get index into 2nd-level page table and initialize 'p'
@@ -195,7 +193,8 @@ char *find_physpage(addr_t vaddr, char type) {
 	//// Case 2: the entry is not valid but on swap
 	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)){
 		int frame = allocate_frame(p);
-		swap_pagein(frame, p->swap_off);
+		int status = swap_pagein(frame, p->swap_off);
+		p->frame = frame << PAGE_SHIFT;
 		p->frame &= ~PG_ONSWAP;
 		miss_count++;	// memeor
 	//// Case 3: we find the frame in pysical memory
