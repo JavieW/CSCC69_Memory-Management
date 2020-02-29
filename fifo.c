@@ -20,9 +20,7 @@ static int index;
  */
 int fifo_evict() {
 	int frame = index;
-	index++;
-	if (index == memsize)
-		index = 0;
+	index = (index+1)%memsize;
 	return frame;
 }
 

@@ -13,6 +13,8 @@ int debug = 0;
 char *physmem = NULL;
 struct frame *coremap = NULL;
 char *tracefile = NULL;
+// used for debugging
+int debug_counter = 0;
 
 /* The algs array gives us a mapping between the name of an eviction
  * algorithm as given in a command line argument, and the function to
@@ -50,11 +52,15 @@ void access_mem(char type, addr_t vaddr) {
 	char *memptr = find_physpage(vaddr, type);
 	int *versionptr = (int *)memptr;
 	addr_t *checkaddr = (addr_t *)(memptr + sizeof(int));
-
+	// used for bugging
+	debug_counter++;
+	printf("vaddr in access memory: %lu \n", vaddr);
+	printf("vaddr in access memory: %lu (checked)\n", *checkaddr);
 	if (*checkaddr != vaddr) {
 		fprintf(stderr,"Error, simulated page returned by pagetable lookup doese not have expected value.\n");
+		printf("debug_counter: %d\n", debug_counter);
 	}
-	
+	assert(*checkaddr == vaddr);
 	if (type == 'S' || type == 'M') {
 		// write access to page, increment version number
 		(*versionptr)++;

@@ -20,26 +20,15 @@ static int start;
  */
 
 int clock_evict() {
-	int i;
-	// loop through the coremap
-	for (i = start; ; i++) {
-		// if the page's reference bit is 1, make it 0
-		if (coremap[i].pte->frame & PG_REF) {
-			coremap[i].pte->frame &= ~PG_REF;
-		} 
-		else {
-			// set the ref bit to 1
-			// update the start index
-			if (i + 1 == memsize)
-				start = 0;
-			else
-				start = i + 1;
+	int i = start;
+	while (1) {
+		if (!(coremap[i].pte->frame & PG_REF))
 			break;
-		}
-		if (i + 1 == memsize)
-			i = 0;
+		
+		coremap[i].pte->frame &= ~PG_REF;
+		i = (i+1)%memsize;
 	}
-
+	start = (i+1)%memsize;
 	return i;
 }
 

@@ -35,7 +35,6 @@ int allocate_frame(pgtbl_entry_t *p) {
 	if(frame == -1) { // Didn't find a free page.
 		// Call replacement algorithm's evict function to select victim
 		frame = evict_fcn();
-		printf("swap!!!!");
 		// All frames were in use, so victim frame must hold some page
 		// Write victim page to swap, if needed, and update pagetable
 		// IMPLEMENTATION NEEDED
@@ -56,10 +55,8 @@ int allocate_frame(pgtbl_entry_t *p) {
 		{
 			evict_dirty_count++;
 			victim->frame &= ~PG_DIRTY;
-			printf("dirty!!!!!");
 		} else {
 			evict_clean_count++;
-			printf("clean!!!!!");
 		}
 	}
 
