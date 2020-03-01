@@ -65,6 +65,8 @@ struct frame {
 	char in_use;       // True if frame is allocated, False if frame is free
 	pgtbl_entry_t *pte;// Pointer back to pagetable entry (pte) for page stored in this frame
 	int time;			// self defined field for lru algo
+	int hash_row; 			// self defined field for opt algo
+	int hash_col; 			// self defined field for opt algo
 };
 
 /* The coremap holds information about physical memory.

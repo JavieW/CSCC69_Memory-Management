@@ -57,7 +57,7 @@ void access_mem(char type, addr_t vaddr) {
 	addr_t *checkaddr = (addr_t *)(memptr + sizeof(int));
 	// printf("vaddr in access memory: %lx \n", vaddr);
 	// printf("vaddr in access memory: %lx (check)\n", *checkaddr);
-	// printf("debug_count: %d\n", debug_count);
+	printf("debug_count: %d\n", debug_count);
 	// printf("----------------\n");
 	if (*checkaddr != vaddr) {
 		fprintf(stderr,"Error, simulated page returned by pagetable lookup doese not have expected value.\n");

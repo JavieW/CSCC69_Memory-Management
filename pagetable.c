@@ -4,7 +4,8 @@
 #include "pagetable.h"
 
 // The top-level page table (also known as the 'page directory')
-pgdir_entry_t pgdir[PTRS_PER_PGDIR]; 
+pgdir_entry_t pgdir[PTRS_PER_PGDIR];
+int table_idx, entry_idx;
 
 // Counters for various events.
 // Your code must increment these when the related events occur.
@@ -63,6 +64,8 @@ int allocate_frame(pgtbl_entry_t *p) {
 	// Record information for virtual page that will now be stored in frame
 	coremap[frame].in_use = 1;
 	coremap[frame].pte = p;
+	coremap[frame].hash_row = table_idx;
+	coremap[frame].hash_col = entry_idx;
 
 	return frame;
 }
@@ -161,6 +164,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	// Use top-level page directory to get pointer to 2nd-level page table
 	// printf("here is the original page directory: %u \n", idx);
 	idx &= PGTBL_MASK;	//// prevent idx out of range
+	table_idx = idx;
 	// printf("here is the page directory after module: %u \n", idx);
 	if (!(pgdir[idx].pde & PG_VALID)){
 		//// lower bit will be set to valid by below
@@ -176,7 +180,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	// Use vaddr to get index into 2nd-level page table and initialize 'p'
 	
 	p = &pgtbl[PGTBL_INDEX(vaddr)];
-
+	entry_idx = PGTBL_INDEX(vaddr);
 	// Check if p is valid or not, on swap or not, and handle appropriately
 
 	//// handle invalid case. (both valid and onswap)

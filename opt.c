@@ -9,9 +9,7 @@
 //extern int memsize;
 
 extern int debug;
-
 extern char *tracefile;
-
 extern struct frame *coremap;
 
 typedef struct line_struct {
@@ -31,8 +29,29 @@ Container ***firstLevel;
  * for the page that is to be evicted.
  */
 int opt_evict() {
-	
-	return 0;
+	int latest = 0;
+	int late_row, late_col;
+	int curr_row, curr_col;
+	for (int i=1; i<memsize; i++) {
+
+		late_row = coremap[latest].hash_row;
+		late_col = coremap[latest].hash_col;
+		curr_row = coremap[i].hash_row;
+		curr_col = coremap[i].hash_col;
+
+		// if the vaddr list at "latest" frame is empty
+		if (firstLevel[late_row][late_col]->head == NULL) {
+			return latest;
+		// if the vaddr list at current frame is empty
+		} else if (firstLevel[curr_row][curr_row]->head == NULL) {
+			return i;
+		// update latest if we found a later one
+		} else if (firstLevel[curr_row][curr_row]->head->line_num >	\
+					firstLevel[late_row][late_row]->head->line_num) {
+			latest = i;
+		}
+	}
+	return latest;
 }
 
 /* This function is called on each access to a page to update any information
@@ -40,41 +59,52 @@ int opt_evict() {
  * Input: The page table entry for the page that is being accessed.
  */
 void opt_ref(pgtbl_entry_t *p) {
-
-	return;
+	int row = coremap[p->frame>>PAGE_SHIFT].hash_row;
+	int col = coremap[p->frame>>PAGE_SHIFT].hash_col;
+	Node *ptr = firstLevel[row][col]->head;
+	printf("i: %d, j: %d, finished line: %d\n", row, col, ptr->line_num);
+	assert(ptr!=NULL);
+	firstLevel[row][col]->head = ptr->next;
+	///////////
+	if (ptr->next==NULL)
+		printf("i: %d, j: %d, finished all lines\n", row, col);
+	else
+		printf("i: %d, j: %d, have next line: %d\n", row, col, ptr->next->line_num);
+	free(ptr);
 }
 
 /* Insert a Node contain line number into a corresponding container of vaddr
  * Input: current line number, vitual address
  */
 void allocate_node(int line_number, addr_t vaddr) {
-	// find the secondLevel of container
-	Container **secondLevel = firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK];
+	int i = PGDIR_INDEX(vaddr)&PGTBL_MASK;
+	int j = PGTBL_INDEX(vaddr);
+	Container **secondLevel;
 	Container *container_ptr;
 	Node *newLine;
 
 	// initilize secondLevle if necessary
+	secondLevel = firstLevel[i];
 	if (secondLevel == NULL) {
 		secondLevel = (Container **)calloc(PTRS_PER_PGTBL, sizeof(Container *));
 		if (secondLevel == NULL) {
 		perror("Initializing secondLevel of hash table failed: ");
 		exit(1);
 		}
+		firstLevel[i] = secondLevel;
 	}
 
-	// find the corresponding container of vaddr
-	container_ptr = secondLevel[PGTBL_INDEX(vaddr)];
-
 	// initilize container_ptr if necessary
+	container_ptr = secondLevel[j];
 	if (container_ptr == NULL) {
 		container_ptr = (Container *)calloc(1, sizeof(Container));
 		if (container_ptr == NULL) {
 		perror("Initializing container_ptr of hash table failed: ");
 		exit(1);
 		}
-
 		container_ptr->head = NULL;
 		container_ptr->tail = NULL;
+		secondLevel[j] = container_ptr;
 	}
 
 	// initialize new line Node
@@ -95,12 +125,12 @@ void allocate_node(int line_number, addr_t vaddr) {
 		container_ptr->tail = newLine;
 	}
 
-	printf("row: %ld, col: %ld\n", PGDIR_INDEX(vaddr)&PGTBL_MASK, PGTBL_INDEX(vaddr));
-	printf("container have head line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->head->line_num);
-	printf("container have tail line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->tail->line_num);
+	if (!debug) {
+		printf("i: %d, j: %d\n", i, j);
+		printf("container have head line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->head->line_num);
+		printf("container have tail line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->tail->line_num);
+	}
 }
-
-
 
 /* Initializes any data structures needed for this
  * replacement algorithm.
