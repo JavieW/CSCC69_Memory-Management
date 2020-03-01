@@ -161,6 +161,9 @@ char *find_physpage(addr_t vaddr, char type) {
 
 	pgtbl_entry_t *p=NULL; // pointer to the full page table entry for vaddr
 	unsigned idx = PGDIR_INDEX(vaddr)&PGTBL_MASK; // get index into pgdir
+	
+	// hash table have the sme index as pgdir
+	hash_row = idx;
 
 	// Use top-level page directory to get pointer to 2nd-level page table
 	if (!(pgdir[idx].pde & PG_VALID)){
@@ -171,6 +174,9 @@ char *find_physpage(addr_t vaddr, char type) {
 	// Use vaddr to get index into 2nd-level page table and initialize 'p'
 	p = &pgtbl[PGTBL_INDEX(vaddr)];
 
+	// hash_table_row have the same index as pftbl
+	hash_col = PGTBL_INDEX(vaddr);
+
 	// Check if p is valid or not, on swap or not, and handle appropriately
 	
 	// invalid Case:
@@ -180,8 +186,7 @@ char *find_physpage(addr_t vaddr, char type) {
 		int frame = allocate_frame(p);
 		init_frame(frame, vaddr);
 		p->frame = frame << PAGE_SHIFT;
-		miss_count++;	// first reference will increse hit count!
-		//printf("frame: %d \n", frame);
+		miss_count++;
 	}
 	// Case 2: the entry is not valid but on swap
 	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)){
@@ -189,7 +194,7 @@ char *find_physpage(addr_t vaddr, char type) {
 		swap_pagein(frame, p->swap_off);
 		p->frame = frame << PAGE_SHIFT;
 		p->frame &= ~PG_ONSWAP;
-		miss_count++;	// memeor
+		miss_count++;
 	// Case 3: we find the frame in pysical memory
 	} else {
 		hit_count++;
@@ -204,10 +209,6 @@ char *find_physpage(addr_t vaddr, char type) {
 	if (type == 'M' || type == 'S'){
 		p->frame = (uintptr_t)p->frame | PG_DIRTY;
 	}
-	
-	// update hash table indexes before call reference function
-	hash_row = idx;
-	hash_col = PGTBL_INDEX(vaddr);
 
 	// Call replacement algorithm's ref_fcn for this page
 	ref_fcn(p);

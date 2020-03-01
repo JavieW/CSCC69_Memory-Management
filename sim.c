@@ -13,7 +13,6 @@ int debug = 0;
 char *physmem = NULL;
 struct frame *coremap = NULL;
 char *tracefile = NULL;
-int debug_count = 0;
 
 /* The algs array gives us a mapping between the name of an eviction
  * algorithm as given in a command line argument, and the function to
@@ -84,7 +83,6 @@ void replay_trace(FILE *infp) {
 	}
 }
 
-
 int main(int argc, char *argv[]) {
 	int opt;
 	unsigned swapsize = 4096;
@@ -149,7 +147,7 @@ int main(int argc, char *argv[]) {
 	
 	// Call replacement algorithm's init_fcn before replaying trace.
 	init_fcn();
-	
+
 	replay_trace(tfp);
 	print_pagedirectory();
 	
