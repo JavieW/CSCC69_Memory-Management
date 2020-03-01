@@ -43,11 +43,11 @@ int opt_evict() {
 		if (firstLevel[late_row][late_col]->head == NULL) {
 			return latest;
 		// if the vaddr list at current frame is empty
-		} else if (firstLevel[curr_row][curr_row]->head == NULL) {
+		} else if (firstLevel[curr_row][curr_col]->head == NULL) {
 			return i;
 		// update latest if we found a later one
-		} else if (firstLevel[curr_row][curr_row]->head->line_num >	\
-					firstLevel[late_row][late_row]->head->line_num) {
+		} else if (firstLevel[curr_row][curr_col]->head->line_num >	\
+					firstLevel[late_row][late_col]->head->line_num) {
 			latest = i;
 		}
 	}
@@ -62,14 +62,14 @@ void opt_ref(pgtbl_entry_t *p) {
 	int row = coremap[p->frame>>PAGE_SHIFT].hash_row;
 	int col = coremap[p->frame>>PAGE_SHIFT].hash_col;
 	Node *ptr = firstLevel[row][col]->head;
-	printf("i: %d, j: %d, finished line: %d\n", row, col, ptr->line_num);
+	//printf("i: %d, j: %d, finished line: %d\n", row, col, ptr->line_num);
 	assert(ptr!=NULL);
 	firstLevel[row][col]->head = ptr->next;
-	///////////
-	if (ptr->next==NULL)
-		printf("i: %d, j: %d, finished all lines\n", row, col);
-	else
-		printf("i: %d, j: %d, have next line: %d\n", row, col, ptr->next->line_num);
+	// ///////////
+	// if (ptr->next==NULL)
+	// 	printf("i: %d, j: %d, finished all lines\n", row, col);
+	// else
+	// 	printf("i: %d, j: %d, have next line: %d\n", row, col, ptr->next->line_num);
 	free(ptr);
 }
 
@@ -125,7 +125,7 @@ void allocate_node(int line_number, addr_t vaddr) {
 		container_ptr->tail = newLine;
 	}
 
-	if (!debug) {
+	if (debug) {
 		printf("i: %d, j: %d\n", i, j);
 		printf("container have head line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->head->line_num);
 		printf("container have tail line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->tail->line_num);
@@ -158,7 +158,7 @@ void opt_init() {
 
 		if(buf[0] != '=') {
 			sscanf(buf, "%c %lx", &type, &vaddr);
-			if(!debug)  {
+			if(debug)  {
 				printf("%c %lx\n", type, vaddr);
 			}
 			allocate_node(line_number, vaddr);
