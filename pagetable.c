@@ -5,7 +5,10 @@
 
 // The top-level page table (also known as the 'page directory')
 pgdir_entry_t pgdir[PTRS_PER_PGDIR];
-int table_idx, entry_idx;
+
+// track two inexes for opt algo
+int hash_row;
+int hash_col;
 
 // Counters for various events.
 // Your code must increment these when the related events occur.
@@ -27,19 +30,23 @@ int evict_dirty_count = 0;
 int allocate_frame(pgtbl_entry_t *p) {
 	int i;
 	int frame = -1;
+	// try to find a free page
 	for(i = 0; i < memsize; i++) {
 		if(!coremap[i].in_use) {
 			frame = i;
 			break;
 		}
 	}
-	if(frame == -1) { // Didn't find a free page.
+	// if don't find a free page.
+	if(frame == -1) {
 		// Call replacement algorithm's evict function to select victim
 		frame = evict_fcn();
-		// All frames were in use, so victim frame must hold some page
-		// Write victim page to swap, if needed, and update pagetable
-		// IMPLEMENTATION NEEDED
-		
+
+		/* 
+		 * All frames were in use, so victim frame must hold some page
+		 * Write victim page to swap, if needed, and update pagetable
+		 */
+
 		// get the victim page table entry 
 		pgtbl_entry_t *victim = coremap[frame].pte;
 
@@ -51,7 +58,7 @@ int allocate_frame(pgtbl_entry_t *p) {
 		victim->frame |= PG_ONSWAP;
 		victim->frame &= ~PG_VALID;
 
-		// increment the evict dirty count
+		// increment the evict counts
 		if (victim->frame & PG_DIRTY)
 		{
 			evict_dirty_count++;
@@ -64,8 +71,8 @@ int allocate_frame(pgtbl_entry_t *p) {
 	// Record information for virtual page that will now be stored in frame
 	coremap[frame].in_use = 1;
 	coremap[frame].pte = p;
-	coremap[frame].hash_row = table_idx;
-	coremap[frame].hash_col = entry_idx;
+	coremap[frame].hash_row = hash_row;
+	coremap[frame].hash_col = hash_col;
 
 	return frame;
 }
@@ -151,42 +158,24 @@ void init_frame(int frame, addr_t vaddr) {
  * this function.
  */
 char *find_physpage(addr_t vaddr, char type) {
-	// // ------debug purpose----------
-	// printf("start! \n");
-	// printf("virtual address: %lx \n", vaddr);
-	// printf("type: %c \n", type);
-	// // ------debug purpose----------
 
 	pgtbl_entry_t *p=NULL; // pointer to the full page table entry for vaddr
-	unsigned idx = PGDIR_INDEX(vaddr); // get index into page directory
+	unsigned idx = PGDIR_INDEX(vaddr)&PGTBL_MASK; // get index into pgdir
 
-	// IMPLEMENTATION NEEDED
 	// Use top-level page directory to get pointer to 2nd-level page table
-	// printf("here is the original page directory: %u \n", idx);
-	idx &= PGTBL_MASK;	//// prevent idx out of range
-	table_idx = idx;
-	// printf("here is the page directory after module: %u \n", idx);
 	if (!(pgdir[idx].pde & PG_VALID)){
-		//// lower bit will be set to valid by below
 		pgdir[idx] = init_second_level();
 	}
 	pgtbl_entry_t *pgtbl = (pgtbl_entry_t *)(pgdir[idx].pde & PAGE_MASK);
 	
-	//// ------debug purpose----------
-	// printf("page directory: \n");
-	// print_pagedirectory();
-	//// ------debug purpose----------
-	
 	// Use vaddr to get index into 2nd-level page table and initialize 'p'
-	
 	p = &pgtbl[PGTBL_INDEX(vaddr)];
-	entry_idx = PGTBL_INDEX(vaddr);
+
 	// Check if p is valid or not, on swap or not, and handle appropriately
-
-	//// handle invalid case. (both valid and onswap)
+	
+	// invalid Case:
 	assert(!(p->frame & PG_VALID && p->frame & PG_ONSWAP));
-
-	//// initialize frame if this is the first reference. (invalid, not onswap)
+	// Case 1: the first reference. (invalid, not onswap)
 	if (!(p->frame & PG_VALID) && !(p->frame & PG_ONSWAP)){
 		int frame = allocate_frame(p);
 		init_frame(frame, vaddr);
@@ -194,14 +183,14 @@ char *find_physpage(addr_t vaddr, char type) {
 		miss_count++;	// first reference will increse hit count!
 		//printf("frame: %d \n", frame);
 	}
-	//// Case 2: the entry is not valid but on swap
+	// Case 2: the entry is not valid but on swap
 	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)){
 		int frame = allocate_frame(p);
 		swap_pagein(frame, p->swap_off);
 		p->frame = frame << PAGE_SHIFT;
 		p->frame &= ~PG_ONSWAP;
 		miss_count++;	// memeor
-	//// Case 3: we find the frame in pysical memory
+	// Case 3: we find the frame in pysical memory
 	} else {
 		hit_count++;
 	}
@@ -216,6 +205,10 @@ char *find_physpage(addr_t vaddr, char type) {
 		p->frame = (uintptr_t)p->frame | PG_DIRTY;
 	}
 	
+	// update hash table indexes before call reference function
+	hash_row = idx;
+	hash_col = PGTBL_INDEX(vaddr);
+
 	// Call replacement algorithm's ref_fcn for this page
 	ref_fcn(p);
 	

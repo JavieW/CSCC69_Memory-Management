@@ -48,23 +48,13 @@ int (*evict_fcn)() = NULL;
  * counter. 
  */
 void access_mem(char type, addr_t vaddr) {
-	
-	debug_count++;
-
 	char *memptr = find_physpage(vaddr, type);
-	
 	int *versionptr = (int *)memptr;
 	addr_t *checkaddr = (addr_t *)(memptr + sizeof(int));
-	// printf("vaddr in access memory: %lx \n", vaddr);
-	// printf("vaddr in access memory: %lx (check)\n", *checkaddr);
-	// printf("debug_count: %d\n", debug_count);
-	// printf("----------------\n");
+
 	if (*checkaddr != vaddr) {
 		fprintf(stderr,"Error, simulated page returned by pagetable lookup doese not have expected value.\n");
-		printf("table idx of vaddr in access memory: %lx \n", vaddr);
-		printf("table idx of vaddr in access memory: %lx (check)\n", *checkaddr);
 	}
-	// print_pagedirectory();
 	assert(*checkaddr == vaddr);
 	
 	if (type == 'S' || type == 'M') {
@@ -96,7 +86,6 @@ void replay_trace(FILE *infp) {
 
 
 int main(int argc, char *argv[]) {
-	
 	int opt;
 	unsigned swapsize = 4096;
 	FILE *tfp = stdin;
@@ -160,7 +149,7 @@ int main(int argc, char *argv[]) {
 	
 	// Call replacement algorithm's init_fcn before replaying trace.
 	init_fcn();
-	printf("-----------------------------finish init----------------------\n");
+	
 	replay_trace(tfp);
 	print_pagedirectory();
 	

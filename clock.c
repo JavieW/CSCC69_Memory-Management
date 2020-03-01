@@ -20,16 +20,18 @@ static int start;
  */
 
 int clock_evict() {
-	int i = start;
+	int victim = start;
 	while (1) {
-		if (!(coremap[i].pte->frame & PG_REF))
+		// if victim is not referenced
+		if (!(coremap[victim].pte->frame & PG_REF))
 			break;
 		
-		coremap[i].pte->frame &= ~PG_REF;
-		i = (i+1)%memsize;
+		// if victim is referenced
+		coremap[victim].pte->frame &= ~PG_REF;
+		victim = (victim+1)%memsize;
 	}
-	start = (i+1)%memsize;
-	return i;
+	start = (victimi+1)%memsize;
+	return victim;
 }
 
 /* This function is called on each access to a page to update any information
@@ -37,7 +39,7 @@ int clock_evict() {
  * Input: The page table entry for the page that is being accessed.
  */
 void clock_ref(pgtbl_entry_t *p) {
-	// p->frame |= PG_REF;
+	// "p->frame |= PG_REF" is already done in pagetable.c no need to repeat
 	return;
 }
 
