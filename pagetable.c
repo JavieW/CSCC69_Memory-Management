@@ -193,7 +193,7 @@ char *find_physpage(addr_t vaddr, char type) {
 	//// Case 2: the entry is not valid but on swap
 	else if (!(p->frame & PG_VALID) && (p->frame & PG_ONSWAP)){
 		int frame = allocate_frame(p);
-		int status = swap_pagein(frame, p->swap_off);
+		swap_pagein(frame, p->swap_off);
 		p->frame = frame << PAGE_SHIFT;
 		p->frame &= ~PG_ONSWAP;
 		miss_count++;	// memeor

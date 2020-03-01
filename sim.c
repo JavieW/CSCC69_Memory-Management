@@ -160,9 +160,8 @@ int main(int argc, char *argv[]) {
 	
 	// Call replacement algorithm's init_fcn before replaying trace.
 	init_fcn();
-	
+	printf("-----------------------------finish init----------------------\n");
 	replay_trace(tfp);
-	printf("end \n");
 	print_pagedirectory();
 	
 	// Cleanup - removes temporary swapfile.
