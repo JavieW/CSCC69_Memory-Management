@@ -95,6 +95,9 @@ void allocate_node(int line_number, addr_t vaddr) {
 		container_ptr->tail = newLine;
 	}
 
+	printf("row: %ld, col: %ld\n", PGDIR_INDEX(vaddr)&PGTBL_MASK, PGTBL_INDEX(vaddr));
+	printf("container have head line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->head->line_num);
+	printf("container have tail line_num: %d\n", firstLevel[PGDIR_INDEX(vaddr)&PGTBL_MASK][PGTBL_INDEX(vaddr)]->tail->line_num);
 }
 
 
