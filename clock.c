@@ -30,7 +30,7 @@ int clock_evict() {
 		coremap[victim].pte->frame &= ~PG_REF;
 		victim = (victim+1)%memsize;
 	}
-	start = (victimi+1)%memsize;
+	start = (victim+1)%memsize;
 	return victim;
 }
 
