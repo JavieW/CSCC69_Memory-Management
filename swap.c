@@ -246,7 +246,7 @@ int swap_pageout(unsigned frame, int swap_offset) {
 		return INVALID_SWAP;
 	}
 
-	// Read page data from swapfile into memory
+	// write page data into swapfile from memory
 	bytes_written = write(swapfd, frame_ptr, SIMPAGESIZE);
 	if (bytes_written != SIMPAGESIZE) {
 		fprintf(stderr,"swap_pageout: did not write whole page\n");
