@@ -84,16 +84,16 @@ void sortCodons(Codon codons[], int num_codons)
     }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     Codon test_codons[25] = {
         {A, T, G}, {A, A, C}, {T, A, A}, {C, T, G}, {A, G, C},
         {T, T, A}, {A, T, G}, {G, T, C}, {C, C, A}, {C, C, C},
         {A, G, C}, {T, T, A}, {A, T, G}, {A, A, C}, {T, G, A},
-	{G, G, G}, {A, G, C}, {A, T, A}, {A, T, G}, {G, T, C},
+	    {G, G, G}, {A, G, C}, {A, T, A}, {A, T, G}, {G, T, C},
         {C, C, A}, {G, C, C}, {T, G, C}, {A, T, A}, {G, C, C}
     };
-    // run this program 4 times
-    for (int i=0; i<4; i++)
-    	sortCodons(test_codons, 3);  // calls your sorting code
+    // run this program 100 times
+    for (int i=0; i<100; i++)
+    	sortCodons(test_codons, 25);  // calls your sorting code
 }
