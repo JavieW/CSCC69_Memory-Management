@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 	printf("Miss count: %d\n", miss_count);
 	printf("Clean evictions: %d\n",evict_clean_count);
 	printf("Dirty evictions: %d\n",evict_dirty_count); 
-	printf("Total references : %d\n", ref_count);
+	printf("Total references: %d\n", ref_count);
 	printf("Hit rate: %.4f\n", (double)hit_count/ref_count * 100);
 	printf("Miss rate: %.4f\n", (double)miss_count/ref_count *100);
 		
