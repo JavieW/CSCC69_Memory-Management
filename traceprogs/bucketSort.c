@@ -1,81 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum
+#define TUPLE_SIZE      5
+#define ENTRY_RANGE      5
+#define TEST_SIZE       5000
+
+typedef int Tuple[TUPLE_SIZE];
+
+typedef struct TupleNode_struct {
+    Tuple tuple;
+    struct TupleNode_struct *next;    
+} TupleNode;
+
+void bucketSort(Tuple tuples[], int num_tuples)
 {
-    A = 0,
-    C = 1,
-    G = 2,
-    T = 3,
-} Nucleotide;  // these are just the integers 0, 1, 2, 3 with fancy names!
-typedef Nucleotide Codon[3];
+    int bucket_size = 1;
+    for (int i=0; i<TUPLE_SIZE; i++)
+        bucket_size = bucket_size * ENTRY_RANGE;
+    // creat buckets
+    TupleNode **buckets = calloc(bucket_size, sizeof(TupleNode *));
+    int i, idx;
+    TupleNode *new_node=NULL;
+    TupleNode *p=NULL;
+    TupleNode *q=NULL;
 
-typedef struct CodonNode_struct {
-    Codon codon;
-    struct CodonNode_struct *next;    
-} CodonNode;
+    for (i=0; i<num_tuples; i++) {
+        idx = 0;
+        for (int j=0; j < TUPLE_SIZE; j++) {
+            idx = idx*ENTRY_RANGE + tuples[i][j];
+        }
+        // printf("%d\n", idx);
 
-/**
- * Sort the codons array in place, in ascending order.
- *
- * EX: sort_codons({{A, A, C}, {A, A, A}}, 2) => {{A, A, A}, {A, A, C}}
- *
- * NOTE: The codons should be sorted based on their own value,
- *          NOT the value of their associated amino acids.
- *
- * REQ:
- *  - The "codons" array points to an array of codons with exactly num_codons in it
- *  - Each codon contains exactly 3 Nucleotides
- *  - Each nucleotide can only take on a value in the set {A, C, G, T}
- *
- * INPUT:
- *  - codons: An array of codons, likely unsorted
- *  - num_codons: The number of codons that are in the array
- *
- * OUTPUT:
- *  - codons: The same array of codons, now sorted
- */
-void sortCodons(Codon codons[], int num_codons)
-{
-    /**
-     * TODO: Implement this function, with O(num_codons) worst case time complexity.
-     *
-     * HINTS:
-     *  - How many possible codons are there? How many buckets do you need?
-     *  - Are any 2 of the same type in the list different in some way? No.
-     *      - That is {A, C, G} == {A, C, G}, even if they are not at the same memory location.
-     *  - So, copying data is the same as recreating it elsewhere....
-     *
-     * NOTE: For this exercise, you can assume that:
-     *  - there will only ever be 4 nucleotides
-     *  - there will always be 3 nucleotides per codon.
-     */
+        new_node = (TupleNode *)calloc(1, sizeof(TupleNode));
 
-    // creat 64 buckets (4*4*4 = 64 conbinations)
-    CodonNode **buckets = calloc(64, sizeof(CodonNode *));
-    int i, j, idx;
-    CodonNode *new_node=NULL;
-    CodonNode *p=NULL;
-    CodonNode *q=NULL;
+        for (int j=0; j < TUPLE_SIZE; j++)
+            new_node->tuple[j] = tuples[i][j];
 
-    for (i=0; i<num_codons; i++) {
-        idx = codons[i][0]*16 + codons[i][1]*4 + codons[i][2];
-        new_node = (CodonNode *)calloc(1, sizeof(CodonNode));
-        new_node->codon[0] = codons[i][0];
-        new_node->codon[1] = codons[i][1];
-        new_node->codon[2] = codons[i][2];
         // insert new_node at head of the corresponding bucket
         new_node->next = buckets[idx];
         buckets[idx] = new_node;
     }
 
-    i = 0;
-    for (j=0; j<64; j++) {
-        p = buckets[j];
+    for (i=0; i<bucket_size; i++) {
+        p = buckets[i];
         while (p!=NULL) {
-            codons[i][0] = p->codon[0];
-            codons[i][1] = p->codon[1];
-            codons[i][2] = p->codon[2];
+            for (int j=0; j < TUPLE_SIZE; j++)
+                tuples[i][j] = p->tuple[j];
             i++;
             q = p->next;
             free(p);
@@ -86,14 +56,21 @@ void sortCodons(Codon codons[], int num_codons)
 
 int main(int argc, char* argv[])
 {
-    Codon test_codons[25] = {
-        {A, T, G}, {A, A, C}, {T, A, A}, {C, T, G}, {A, G, C},
-        {T, T, A}, {A, T, G}, {G, T, C}, {C, C, A}, {C, C, C},
-        {A, G, C}, {T, T, A}, {A, T, G}, {A, A, C}, {T, G, A},
-	    {G, G, G}, {A, G, C}, {A, T, A}, {A, T, G}, {G, T, C},
-        {C, C, A}, {G, C, C}, {T, G, C}, {A, T, A}, {G, C, C}
-    };
-    // run this program 100 times
-    for (int i=0; i<100; i++)
-    	sortCodons(test_codons, 25);  // calls your sorting code
+    int ran;
+    Tuple large_tupleset[TEST_SIZE];
+    // genereate a larger set
+    for (int i=0; i<TEST_SIZE; i++) {
+        for (int j=0; j < TUPLE_SIZE; j++) {
+            ran = random()%ENTRY_RANGE;
+            large_tupleset[i][j] = ran;
+        }            
+    }
+    bucketSort(large_tupleset, TEST_SIZE);  // calls your sorting code
+
+    // printf("%d, %d, %d\n", large_tupleset[0][0],large_tupleset[0][1], large_tupleset[0][2]);
+    // printf("%d, %d, %d\n", large_tupleset[1][0],large_tupleset[1][1], large_tupleset[1][2]);
+    // printf("%d, %d, %d\n", large_tupleset[2][0],large_tupleset[2][1], large_tupleset[2][2]);
+    // printf("%d, %d, %d\n", large_tupleset[3][0],large_tupleset[3][1], large_tupleset[3][2]);
+    // printf("%d, %d, %d\n", large_tupleset[4][0],large_tupleset[4][1], large_tupleset[4][2]);
+
 }
