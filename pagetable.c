@@ -203,11 +203,11 @@ char *find_physpage(addr_t vaddr, char type) {
 	// Make sure that p is marked valid and referenced. Also mark it
 	// dirty if the access type indicates that the page will be written to.
 	ref_count++;
-	p->frame = (uintptr_t)p->frame | PG_VALID;
-	p->frame = (uintptr_t)p->frame | PG_REF;
+	p->frame |= PG_VALID;
+	p->frame |= PG_REF;
 	
 	if (type == 'M' || type == 'S'){
-		p->frame = (uintptr_t)p->frame | PG_DIRTY;
+		p->frame |= PG_DIRTY;
 	}
 
 	// Call replacement algorithm's ref_fcn for this page
