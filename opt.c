@@ -78,25 +78,25 @@ void allocate_node(int line_number, addr_t vaddr) {
 	Container *hash_table_cell;
 	Node *newLine;
 
-	// initilize hash_table_row if necessary
+	// initialize hash_table_row if necessary
 	hash_table_row = hash_table[row];
 	if (hash_table_row == NULL) {
 		hash_table_row = (Container **)calloc(PTRS_PER_PGTBL, sizeof(Container *));
 		if (hash_table_row == NULL) {
-		perror("Initializing hash_table_row of hash table failed: ");
-		exit(1);
+			perror("Initializing hash_table_row of hash table failed: ");
+			exit(1);
 		}
 		hash_table[row] = hash_table_row;
 	}
 	assert(hash_table[row] != NULL);
 
-	// initilize hash_table_cell if necessary
+	// initialize hash_table_cell if necessary
 	hash_table_cell = hash_table_row[col];
 	if (hash_table_cell == NULL) {
 		hash_table_cell = (Container *)calloc(1, sizeof(Container));
 		if (hash_table_cell == NULL) {
-		perror("Initializing hash_table_cell of hash table failed: ");
-		exit(1);
+			perror("Initializing hash_table_cell of hash table failed: ");
+			exit(1);
 		}
 		hash_table_cell->head = NULL;
 		hash_table_cell->tail = NULL;

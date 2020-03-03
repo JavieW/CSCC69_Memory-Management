@@ -42,7 +42,7 @@ void sumRandomPoint() {
     randomSum += array[ran1][ran2][ran3];
 }
 
-void sumPepeatPoint() {
+void sumRepeatPoint() {
     int ran1 = random()%64;
     int ran2 = random()%64;
     int ran3 = random()%64;
@@ -68,6 +68,6 @@ int main(int argc, char* argv[]) {
 
     // sumPepeatPoint n time;
     for (int i=0; i<0; i++) {
-        sumPepeatPoint();
+        sumRepeatPoint();
     }
 }
